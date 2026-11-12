@@ -1,0 +1,2030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CERN-ALPHA // Antimatter Containment & Annihilation Lab</title>
+    <style>
+        :root {
+            --bg-void: #05070c;
+            --panel-bg: rgba(11, 16, 28, 0.78);
+            --panel-border: rgba(56, 189, 248, 0.22);
+            --matter-cyan: #00f0ff;
+            --matter-glow: rgba(0, 240, 255, 0.45);
+            --antimatter-magenta: #ff1e6e;
+            --antimatter-glow: rgba(255, 30, 110, 0.5);
+            --gamma-gold: #ffbe0b;
+            --gamma-glow: rgba(255, 190, 11, 0.55);
+            --text-main: #e2e8f0;
+            --text-muted: #7c8da6;
+            --danger-red: #ff3b30;
+            --success-green: #10b981;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-void);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(16, 26, 48, 0.45) 0%, rgba(5, 7, 12, 1) 85%),
+                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+        }
+
+        /* Top Navigation & Status Header */
+        header {
+            height: 54px;
+            min-height: 54px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(8, 12, 22, 0.9);
+            border-bottom: 1px solid var(--panel-border);
+            backdrop-filter: blur(12px);
+            z-index: 20;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, var(--matter-cyan), var(--antimatter-magenta));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            color: #05070c;
+            box-shadow: 0 0 15px rgba(255, 30, 110, 0.4);
+        }
+
+        .brand-title {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .brand-sub {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-left: 8px;
+        }
+
+        /* Mode Switcher Tabs */
+        .mode-tabs {
+            display: flex;
+            background: rgba(5, 7, 12, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 3px;
+            gap: 4px;
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mode-btn:hover {
+            color: var(--text-main);
+        }
+
+        .mode-btn.active {
+            background: rgba(0, 240, 255, 0.14);
+            color: var(--matter-cyan);
+            box-shadow: inset 0 0 0 1px rgba(0, 240, 255, 0.35);
+        }
+
+        .mode-btn.active.collider-tab {
+            background: rgba(255, 30, 110, 0.16);
+            color: var(--antimatter-magenta);
+            box-shadow: inset 0 0 0 1px rgba(255, 30, 110, 0.4);
+        }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--success-green);
+        }
+
+        .status-pill.quench {
+            background: rgba(255, 59, 48, 0.18);
+            border-color: rgba(255, 59, 48, 0.5);
+            color: var(--danger-red);
+            animation: pulseAlert 0.8s infinite alternate;
+        }
+
+        .pulse-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        @keyframes pulseAlert {
+            from { opacity: 0.7; }
+            to { opacity: 1; box-shadow: 0 0 14px rgba(255, 59, 48, 0.5); }
+        }
+
+        /* Main Workspace Grid (Optimized for 1366x768 & Responsive) */
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 310px 1fr 330px;
+            gap: 12px;
+            padding: 12px;
+            height: calc(100vh - 54px);
+            overflow: hidden;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            backdrop-filter: blur(14px);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.15) transparent;
+        }
+
+        .panel::-webkit-scrollbar {
+            width: 4px;
+        }
+        .panel::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.15);
+            border-radius: 4px;
+        }
+
+        .panel-section {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .panel-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Controls & Sliders */
+        .control-group {
+            margin-bottom: 12px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 5px;
+        }
+
+        .control-label {
+            font-size: 12px;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .control-value {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--matter-cyan);
+        }
+
+        .control-value.magenta {
+            color: var(--antimatter-magenta);
+        }
+
+        .control-value.gold {
+            color: var(--gamma-gold);
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--matter-cyan);
+            box-shadow: 0 0 10px var(--matter-glow);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        input[type="range"].magenta-slider::-webkit-slider-thumb {
+            background: var(--antimatter-magenta);
+            box-shadow: 0 0 10px var(--antimatter-glow);
+        }
+
+        input[type="range"].gold-slider::-webkit-slider-thumb {
+            background: var(--gamma-gold);
+            box-shadow: 0 0 10px var(--gamma-glow);
+        }
+
+        /* Particle Selector Cards */
+        .species-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .species-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 8px 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .species-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .species-card.selected {
+            background: rgba(255, 30, 110, 0.12);
+            border-color: var(--antimatter-magenta);
+            box-shadow: 0 0 12px rgba(255, 30, 110, 0.18);
+        }
+
+        .species-symbol {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--antimatter-magenta);
+            margin-bottom: 2px;
+        }
+
+        .species-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .species-mass {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* Action Buttons */
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 9px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-inject {
+            background: rgba(255, 30, 110, 0.16);
+            border-color: rgba(255, 30, 110, 0.45);
+            color: #ff6b9d;
+        }
+        .btn-inject:hover {
+            background: rgba(255, 30, 110, 0.28);
+            box-shadow: 0 0 15px rgba(255, 30, 110, 0.3);
+        }
+
+        .btn-quench {
+            background: rgba(255, 59, 48, 0.14);
+            border-color: rgba(255, 59, 48, 0.4);
+            color: #ff7b72;
+        }
+        .btn-quench:hover {
+            background: rgba(255, 59, 48, 0.25);
+            box-shadow: 0 0 15px rgba(255, 59, 48, 0.3);
+        }
+
+        .btn-fire {
+            grid-column: span 2;
+            background: linear-gradient(90deg, rgba(0, 240, 255, 0.2), rgba(255, 30, 110, 0.2));
+            border-color: rgba(255, 190, 11, 0.5);
+            color: var(--gamma-gold);
+            font-size: 12px;
+            padding: 10px;
+        }
+        .btn-fire:hover {
+            background: linear-gradient(90deg, rgba(0, 240, 255, 0.3), rgba(255, 30, 110, 0.3));
+            box-shadow: 0 0 18px rgba(255, 190, 11, 0.28);
+        }
+
+        .btn-toggle.active {
+            background: rgba(255, 190, 11, 0.18);
+            border-color: var(--gamma-gold);
+            color: var(--gamma-gold);
+        }
+
+        /* Center Viewport Canvas */
+        .viewport-container {
+            position: relative;
+            border-radius: 12px;
+            border: 1px solid var(--panel-border);
+            background: radial-gradient(circle at center, #0a101d 0%, #04060a 100%);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            cursor: grab;
+        }
+
+        canvas:active {
+            cursor: grabbing;
+        }
+
+        /* Canvas HUD Overlays */
+        .hud-top-left {
+            position: absolute;
+            top: 12px;
+            left: 14px;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .hud-title {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--matter-cyan);
+            letter-spacing: 0.06em;
+        }
+
+        .hud-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            max-width: 340px;
+            line-height: 1.35;
+        }
+
+        .hud-legend {
+            position: absolute;
+            bottom: 12px;
+            left: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: rgba(5, 7, 12, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 6px 12px;
+            border-radius: 8px;
+            backdrop-filter: blur(8px);
+            pointer-events: none;
+            font-size: 11px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .hud-camera-hint {
+            position: absolute;
+            bottom: 12px;
+            right: 14px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-muted);
+            background: rgba(5, 7, 12, 0.7);
+            padding: 5px 9px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            pointer-events: none;
+        }
+
+        .toast-banner {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: rgba(11, 16, 28, 0.9);
+            border: 1px solid var(--gamma-gold);
+            color: var(--gamma-gold);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            box-shadow: 0 0 15px rgba(255, 190, 11, 0.25);
+            opacity: 0;
+            transform: translateY(-6px);
+            transition: all 0.25s ease;
+            pointer-events: none;
+        }
+
+        .toast-banner.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Right Panel Telemetry Cards */
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .metric-card {
+            background: rgba(5, 7, 12, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 8px;
+            padding: 9px 10px;
+        }
+
+        .metric-card.full {
+            grid-column: span 2;
+        }
+
+        .metric-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 3px;
+        }
+
+        .metric-val {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .metric-val.cyan { color: var(--matter-cyan); }
+        .metric-val.magenta { color: var(--antimatter-magenta); }
+        .metric-val.gold { color: var(--gamma-gold); }
+
+        .metric-sub {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Stability Progress Bar */
+        .stability-bar-bg {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .stability-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: var(--success-green);
+            transition: width 0.2s, background-color 0.2s;
+        }
+
+        /* Formula Box */
+        .formula-box {
+            background: rgba(0, 240, 255, 0.04);
+            border: 1px solid rgba(0, 240, 255, 0.15);
+            border-radius: 8px;
+            padding: 10px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            line-height: 1.5;
+            color: #cbd5e1;
+        }
+
+        .formula-highlight {
+            color: var(--gamma-gold);
+            font-weight: 700;
+        }
+
+        /* Event Log */
+        .event-log {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 115px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            padding: 3px 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 2px solid var(--matter-cyan);
+        }
+        .log-entry.annihilation {
+            border-left-color: var(--gamma-gold);
+            color: #fde68a;
+        }
+        .log-entry.alert {
+            border-left-color: var(--danger-red);
+            color: #fca5a5;
+        }
+
+        /* Responsive Fallback for Smaller Screens */
+        @media (max-width: 1100px) {
+            body {
+                height: auto;
+                overflow-y: auto;
+            }
+            main {
+                grid-template-columns: 1fr;
+                height: auto;
+                overflow: visible;
+            }
+            .viewport-container {
+                height: 460px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">
+            <div class="brand-badge">Ā</div>
+            <div>
+                <span class="brand-title">Antimatter Containment & Annihilation Lab</span>
+                <span class="brand-sub">EXP-ALPHA // RELATIVISTIC TELEMETRY</span>
+            </div>
+        </div>
+
+        <div class="mode-tabs">
+            <button class="mode-btn active" id="tab-trap" onclick="switchMode('trap')">
+                <span>⏣</span> Penning Trap Containment
+            </button>
+            <button class="mode-btn collider-tab" id="tab-collider" onclick="switchMode('collider')">
+                <span>⚛</span> Particle Annihilation Collider
+            </button>
+        </div>
+
+        <div class="header-status">
+            <div class="status-pill" id="system-status">
+                <span class="pulse-dot"></span>
+                <span id="status-text">CONFINEMENT NOMINAL</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- LEFT PANEL: CONTROLS & PARAMETERS -->
+        <aside class="panel">
+            <!-- Particle Species Selection -->
+            <div class="panel-section">
+                <div class="section-title">
+                    <span>Antimatter Species</span>
+                    <span id="charge-indicator" style="color: var(--antimatter-magenta);">q = +1e</span>
+                </div>
+                <div class="species-grid">
+                    <div class="species-card selected" id="card-positron" onclick="selectSpecies('positron')">
+                        <div class="species-symbol">e⁺ / e⁻</div>
+                        <div class="species-name">Positron</div>
+                        <div class="species-mass">0.511 MeV/c²</div>
+                    </div>
+                    <div class="species-card" id="card-antiproton" onclick="selectSpecies('antiproton')">
+                        <div class="species-symbol">p̄ / p⁺</div>
+                        <div class="species-name">Antiproton</div>
+                        <div class="species-mass">938.27 MeV/c²</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mode 1 Controls: Penning Trap -->
+            <div class="panel-section" id="controls-trap">
+                <div class="section-title">
+                    <span>Penning Trap Field Parameters</span>
+                    <span>3D B+E</span>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-header">
+                        <span class="control-label">Axial Magnetic Field (B<sub>z</sub>)</span>
+                        <span class="control-value" id="val-bfield">3.00 T</span>
+                    </div>
+                    <input type="range" id="slider-bfield" min="0.2" max="8.0" step="0.1" value="3.0" oninput="updateTrapParams()">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-header">
+                        <span class="control-label">Quadrupole Potential (V<sub>0</sub>)</span>
+                        <span class="control-value magenta" id="val-efield">120 V</span>
+                    </div>
+                    <input type="range" class="magenta-slider" id="slider-efield" min="0" max="400" step="5" value="120" oninput="updateTrapParams()">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-header">
+                        <span class="control-label">Cryo-Vacuum Pressure</span>
+                        <span class="control-value gold" id="val-vacuum">1.0×10⁻¹² Pa</span>
+                    </div>
+                    <input type="range" class="gold-slider" id="slider-vacuum" min="-14" max="-6" step="0.5" value="-12" oninput="updateTrapParams()">
+                </div>
+            </div>
+
+            <!-- Mode 2 Controls: Particle Collider -->
+            <div class="panel-section" id="controls-collider" style="display: none;">
+                <div class="section-title">
+                    <span>Synchrotron Beam Parameters</span>
+                    <span>RELATIVISTIC</span>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-header">
+                        <span class="control-label">Beam Kinetic Energy (K)</span>
+                        <span class="control-value gold" id="val-energy">1.50 MeV</span>
+                    </div>
+                    <input type="range" class="gold-slider" id="slider-energy" min="0.1" max="100" step="0.1" value="1.5" oninput="updateColliderParams()">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-header">
+                        <span class="control-label">Bunch Luminosity / Density</span>
+                        <span class="control-value" id="val-luminosity">6 Particles</span>
+                    </div>
+                    <input type="range" id="slider-luminosity" min="1" max="16" step="1" value="6" oninput="updateColliderParams()">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-header">
+                        <span class="control-label">Beam Alignment Offset</span>
+                        <span class="control-value magenta" id="val-offset">0.0 mm</span>
+                    </div>
+                    <input type="range" class="magenta-slider" id="slider-offset" min="-25" max="25" step="1" value="0" oninput="updateColliderParams()">
+                </div>
+            </div>
+
+            <!-- Experimental Triggers -->
+            <div class="panel-section">
+                <div class="section-title">
+                    <span>Experimental Operations</span>
+                    <span>ACTIONS</span>
+                </div>
+                <div class="btn-grid">
+                    <button class="action-btn btn-inject" id="btn-inject" onclick="injectAntimatter()">
+                        + Inject Antimatter
+                    </button>
+                    <button class="action-btn btn-quench" id="btn-quench" onclick="triggerMagneticQuench()">
+                        ⚡ Magnetic Quench
+                    </button>
+                    <button class="action-btn btn-fire" id="btn-fire" style="display: none;" onclick="fireColliderBeams()">
+                        ▶ Fire Opposing Particle Beams
+                    </button>
+                    <button class="action-btn btn-toggle" id="btn-slowmo" onclick="toggleSlowMotion()">
+                        ⏱ Slow-Mo (1.0x)
+                    </button>
+                    <button class="action-btn btn-toggle active" id="btn-vectors" onclick="toggleVectors()">
+                        ↗ Momentum Vectors
+                    </button>
+                </div>
+            </div>
+
+            <!-- Physics Reference -->
+            <div class="panel-section">
+                <div class="section-title">
+                    <span>Relativistic Physics Equations</span>
+                </div>
+                <div class="formula-box" id="physics-formula-box">
+                    <div>E<sub>total</sub> = 2m₀c² + K<sub>+</sub> + K<sub>−</sub></div>
+                    <div>f<sub>c</sub> = |q|B / (2πm)</div>
+                    <div style="margin-top: 4px; color: var(--text-muted); font-size: 10px;">
+                        Low-E e⁺e⁻ → 2γ (511 keV @ 180°)<br>
+                        High-E p̄p → π⁺, π⁻, π⁰ meson jets
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CENTER VIEWPORT: 3D/2D SIMULATION CANVAS -->
+        <section class="viewport-container" id="viewport">
+            <canvas id="simCanvas"></canvas>
+
+            <div class="hud-top-left">
+                <div class="hud-title" id="hud-mode-title">PENNING TRAP // HYPERBOLIC MAGNETO-ELECTROSTATIC CONFINEMENT</div>
+                <div class="hud-desc" id="hud-mode-desc">
+                    Axial B-field forces radial cyclotron orbits; quadrupole ring & endcap electrodes create a harmonic axial potential well.
+                </div>
+            </div>
+
+            <div class="toast-banner" id="toast-banner">EVENT DETECTED</div>
+
+            <div class="hud-legend">
+                <div class="legend-item">
+                    <span class="dot" style="background: var(--antimatter-magenta); box-shadow: 0 0 8px var(--antimatter-magenta);"></span>
+                    <span>Antimatter (e⁺ / p̄)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="dot" style="background: var(--matter-cyan); box-shadow: 0 0 8px var(--matter-cyan);"></span>
+                    <span>Matter / Residual Gas (e⁻ / p⁺)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="dot" style="background: var(--gamma-gold); box-shadow: 0 0 8px var(--gamma-gold);"></span>
+                    <span>Gamma Photons (γ) / Pion Jets</span>
+                </div>
+            </div>
+
+            <div class="hud-camera-hint">
+                Drag to rotate 3D trap • Scroll to zoom
+            </div>
+        </section>
+
+        <!-- RIGHT PANEL: LIVE TELEMETRY & CALCULATIONS -->
+        <aside class="panel">
+            <div class="panel-section">
+                <div class="section-title">
+                    <span>Live Containment & Beam Telemetry</span>
+                    <span style="color: var(--success-green);">REAL-TIME</span>
+                </div>
+
+                <div class="telemetry-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">Trapped / Active Count</div>
+                        <div class="metric-val magenta" id="tel-count">24</div>
+                        <div class="metric-sub" id="tel-species-label">Positrons (e⁺)</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">Annihilation Events</div>
+                        <div class="metric-val gold" id="tel-annihilations">0</div>
+                        <div class="metric-sub">Vertex Detections</div>
+                    </div>
+
+                    <div class="metric-card full">
+                        <div class="metric-label" style="display:flex; justify-content:space-between;">
+                            <span>Magnetic Containment Stability</span>
+                            <span id="tel-stability-pct" style="color: var(--success-green);">99.8%</span>
+                        </div>
+                        <div class="stability-bar-bg">
+                            <div class="stability-bar-fill" id="tel-stability-bar"></div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">Cyclotron Freq (f<sub>c</sub>)</div>
+                        <div class="metric-val cyan" id="tel-cyclotron">83.98 GHz</div>
+                        <div class="metric-sub" id="tel-larmor">r<sub>L</sub>: 0.14 mm</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">Antimatter Mass Stored</div>
+                        <div class="metric-val magenta" id="tel-mass">2.19e-20 ng</div>
+                        <div class="metric-sub" id="tel-charge">Q = +3.84e-18 C</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">
+                    <span>Mass-Energy Equivalence (E = mc² + K)</span>
+                    <span style="color: var(--gamma-gold);">100% EFFICIENCY</span>
+                </div>
+
+                <div class="telemetry-grid">
+                    <div class="metric-card full">
+                        <div class="metric-label">Last / Single Pair Annihilation Yield</div>
+                        <div class="metric-val gold" id="tel-pair-energy">1.022 MeV</div>
+                        <div class="metric-sub" id="tel-pair-joules">1.637 × 10⁻¹³ Joules (2 × 511 keV γ)</div>
+                    </div>
+
+                    <div class="metric-card full">
+                        <div class="metric-label">Cumulative Energy Released</div>
+                        <div class="metric-val cyan" id="tel-total-energy">0.000 MeV</div>
+                        <div class="metric-sub" id="tel-total-joules">0.00 × 10⁰ J</div>
+                    </div>
+
+                    <div class="metric-card full">
+                        <div class="metric-label">Macroscopic Scale Equivalence (1g Antimatter)</div>
+                        <div class="metric-val" style="font-size: 12px; color: #f8fafc;" id="tel-macro-equiv">
+                            1.0 g + 1.0 g → 1.80 × 10¹⁴ J (43.0 kilotons TNT)
+                        </div>
+                        <div class="metric-sub" id="tel-session-tnt">
+                            Session yield: 0.00 × 10⁰ pg TNT equivalent
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section" style="flex: 1; display: flex; flex-direction: column;">
+                <div class="section-title">
+                    <span>Detector Event Log</span>
+                    <span style="cursor:pointer; color: var(--matter-cyan);" onclick="clearLog()">CLEAR</span>
+                </div>
+                <div class="event-log" id="event-log">
+                    <div class="log-entry">Penning trap initialized at B = 3.00 T.</div>
+                    <div class="log-entry">Ultra-high cryo-vacuum established (1.0e-12 Pa).</div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <script>
+        /**
+         * ANTIMATTER CONTAINMENT & ANNIHILATION PHYSICS SIMULATION ENGINE
+         * Self-contained 3D-projected relativistic particle simulation.
+         */
+
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Physical Constants (SI & Natural Units)
+        const CONSTANTS = {
+            c: 2.99792458e8,          // Speed of light (m/s)
+            e: 1.60217663e-19,         // Elementary charge (C)
+            MeV_to_J: 1.60217663e-13,  // 1 MeV in Joules
+            TNT_J_per_g: 4184,         // 1 gram TNT = 4184 J
+            species: {
+                positron: {
+                    name: 'Positron',
+                    antiSymbol: 'e⁺',
+                    matterSymbol: 'e⁻',
+                    massKg: 9.1093837e-31,
+                    restMeV: 0.51099895,
+                    chargeSign: 1,
+                    colorAnti: '#ff1e6e',
+                    colorMatter: '#00f0ff'
+                },
+                antiproton: {
+                    name: 'Antiproton',
+                    antiSymbol: 'p̄',
+                    matterSymbol: 'p⁺',
+                    massKg: 1.67262192e-27,
+                    restMeV: 938.272088,
+                    chargeSign: -1,
+                    colorAnti: '#ff1e6e',
+                    colorMatter: '#00f0ff'
+                }
+            }
+        };
+
+        // Simulation State
+        const state = {
+            mode: 'trap',              // 'trap' | 'collider'
+            species: 'positron',       // 'positron' | 'antiproton'
+            slowMo: false,
+            timeScale: 1.0,
+            showVectors: true,
+            quenched: false,
+
+            // Penning Trap Parameters
+            bField: 3.0,               // Tesla
+            ePotential: 120,           // Volts
+            vacuumExp: -12,            // 10^vacuumExp Pascals
+
+            // Collider Parameters
+            beamEnergyMeV: 1.5,        // Kinetic energy per particle (MeV)
+            bunchCount: 6,             // Particles per beam
+            beamOffset: 0,             // Vertical offset in px
+
+            // 3D Camera Angles (for Penning Trap)
+            camYaw: 0.45,
+            camPitch: 0.28,
+            camZoom: 1.0,
+            isDragging: false,
+            lastMouseX: 0,
+            lastMouseY: 0,
+
+            // Entities
+            particles: [],
+            gasMolecules: [],
+            photons: [],
+            jets: [],
+            flashes: [],
+
+            // Telemetry Counters
+            annihilationCount: 0,
+            totalEnergyMeV: 0,
+            lastPairEnergyMeV: 1.022,
+            stability: 100
+        };
+
+        // Resize Canvas cleanly
+        function resizeCanvas() {
+            const container = document.getElementById('viewport');
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = container.clientWidth * dpr;
+            canvas.height = container.clientHeight * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // 3D Camera Interaction Listeners
+        canvas.addEventListener('mousedown', (e) => {
+            state.isDragging = true;
+            state.lastMouseX = e.clientX;
+            state.lastMouseY = e.clientY;
+        });
+        window.addEventListener('mouseup', () => {
+            state.isDragging = false;
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (!state.isDragging) return;
+            const dx = e.clientX - state.lastMouseX;
+            const dy = e.clientY - state.lastMouseY;
+            state.lastMouseX = e.clientX;
+            state.lastMouseY = e.clientY;
+            state.camYaw += dx * 0.007;
+            state.camPitch = Math.max(-1.2, Math.min(1.2, state.camPitch + dy * 0.007));
+        });
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            state.camZoom = Math.max(0.55, Math.min(2.0, state.camZoom - e.deltaY * 0.001));
+        }, { passive: false });
+
+        // Touch support for mobile/tablet rotation
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                state.isDragging = true;
+                state.lastMouseX = e.touches[0].clientX;
+                state.lastMouseY = e.touches[0].clientY;
+            }
+        });
+        canvas.addEventListener('touchmove', (e) => {
+            if (state.isDragging && e.touches.length === 1) {
+                const dx = e.touches[0].clientX - state.lastMouseX;
+                const dy = e.touches[0].clientY - state.lastMouseY;
+                state.lastMouseX = e.touches[0].clientX;
+                state.lastMouseY = e.touches[0].clientY;
+                state.camYaw += dx * 0.008;
+                state.camPitch = Math.max(-1.2, Math.min(1.2, state.camPitch + dy * 0.008));
+            }
+        });
+        canvas.addEventListener('touchend', () => { state.isDragging = false; });
+
+        // 3D Projection Helper (Maps 3D trap space to 2D canvas)
+        function project3D(x, y, z) {
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            // Rotate around Y (yaw)
+            const cosY = Math.cos(state.camYaw);
+            const sinY = Math.sin(state.camYaw);
+            const x1 = x * cosY - z * sinY;
+            const z1 = x * sinY + z * cosY;
+
+            // Rotate around X (pitch)
+            const cosP = Math.cos(state.camPitch);
+            const sinP = Math.sin(state.camPitch);
+            const y2 = y * cosP - z1 * sinP;
+            const z2 = y * sinP + z1 * cosP;
+
+            const fov = 560 * state.camZoom;
+            const perspective = fov / (fov + z2 + 260);
+            return {
+                x: w / 2 + x1 * perspective,
+                y: h / 2 + y2 * perspective,
+                scale: perspective,
+                depth: z2
+            };
+        }
+
+        // UI & Event Helpers
+        function showToast(msg) {
+            const toast = document.getElementById('toast-banner');
+            toast.textContent = msg;
+            toast.classList.add('visible');
+            clearTimeout(toast._timer);
+            toast._timer = setTimeout(() => toast.classList.remove('visible'), 2200);
+        }
+
+        function addLog(text, type = 'normal') {
+            const log = document.getElementById('event-log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry' + (type === 'annihilation' ? ' annihilation' : type === 'alert' ? ' alert' : '');
+            const now = new Date();
+            const ts = now.toTimeString().split(' ')[0];
+            entry.textContent = `[${ts}] ${text}`;
+            log.prepend(entry);
+            if (log.children.length > 35) log.removeChild(log.lastChild);
+        }
+
+        function clearLog() {
+            document.getElementById('event-log').innerHTML = '';
+        }
+
+        // Mode Switching
+        function switchMode(newMode) {
+            state.mode = newMode;
+            state.particles = [];
+            state.gasMolecules = [];
+            state.photons = [];
+            state.jets = [];
+            state.flashes = [];
+            state.quenched = false;
+
+            document.getElementById('tab-trap').classList.toggle('active', newMode === 'trap');
+            document.getElementById('tab-collider').classList.toggle('active', newMode === 'collider');
+
+            document.getElementById('controls-trap').style.display = newMode === 'trap' ? 'block' : 'none';
+            document.getElementById('controls-collider').style.display = newMode === 'collider' ? 'block' : 'none';
+
+            document.getElementById('btn-inject').style.display = newMode === 'trap' ? 'flex' : 'none';
+            document.getElementById('btn-quench').style.display = newMode === 'trap' ? 'flex' : 'none';
+            document.getElementById('btn-fire').style.display = newMode === 'collider' ? 'flex' : 'none';
+
+            const statusPill = document.getElementById('system-status');
+            statusPill.classList.remove('quench');
+
+            if (newMode === 'trap') {
+                document.getElementById('status-text').textContent = 'CONFINEMENT NOMINAL';
+                document.getElementById('hud-mode-title').textContent = 'PENNING TRAP // HYPERBOLIC MAGNETO-ELECTROSTATIC CONFINEMENT';
+                document.getElementById('hud-mode-desc').textContent = 'Axial B-field forces radial cyclotron orbits; quadrupole ring & endcap electrodes create a harmonic axial potential well.';
+                spawnTrapCloud(24);
+                addLog('Switched to Penning Trap Containment Mode.');
+            } else {
+                document.getElementById('status-text').textContent = 'BEAMLINE READY';
+                document.getElementById('hud-mode-title').textContent = 'RELATIVISTIC COLLIDER // PARTICLE-ANTIPARTICLE ANNIHILATION';
+                document.getElementById('hud-mode-desc').textContent = 'Opposing matter and antimatter bunches collide at relativistic velocities, converting 100% rest + kinetic mass into radiation.';
+                fireColliderBeams();
+                addLog('Switched to Relativistic Annihilation Collider Mode.');
+            }
+            updateTelemetry();
+        }
+
+        // Species Selection
+        function selectSpecies(sp) {
+            state.species = sp;
+            document.getElementById('card-positron').classList.toggle('selected', sp === 'positron');
+            document.getElementById('card-antiproton').classList.toggle('selected', sp === 'antiproton');
+
+            const info = CONSTANTS.species[sp];
+            document.getElementById('charge-indicator').textContent = info.chargeSign > 0 ? 'q = +1e' : 'q = −1e';
+
+            if (state.mode === 'trap') {
+                state.particles = [];
+                spawnTrapCloud(24);
+            } else {
+                updateColliderParams();
+                fireColliderBeams();
+            }
+            addLog(`Selected antimatter species: ${info.name} (${info.antiSymbol}).`);
+            updateTelemetry();
+        }
+
+        // Parameter Updates
+        function updateTrapParams() {
+            state.bField = parseFloat(document.getElementById('slider-bfield').value);
+            state.ePotential = parseFloat(document.getElementById('slider-efield').value);
+            state.vacuumExp = parseFloat(document.getElementById('slider-vacuum').value);
+
+            document.getElementById('val-bfield').textContent = `${state.bField.toFixed(2)} T`;
+            document.getElementById('val-efield').textContent = `${state.ePotential.toFixed(0)} V`;
+            document.getElementById('val-vacuum').innerHTML = `1.0×10<sup>${state.vacuumExp}</sup> Pa`;
+
+            if (state.quenched && state.bField > 1.0) {
+                state.quenched = false;
+                document.getElementById('system-status').classList.remove('quench');
+                document.getElementById('status-text').textContent = 'CONFINEMENT RESTORED';
+            }
+            updateTelemetry();
+        }
+
+        function updateColliderParams() {
+            const rawSlider = parseFloat(document.getElementById('slider-energy').value);
+            // Scale energy appropriately: MeV for electrons/positrons, GeV range for protons/antiprotons
+            if (state.species === 'positron') {
+                state.beamEnergyMeV = rawSlider; // 0.1 to 100 MeV
+                document.getElementById('val-energy').textContent = `${state.beamEnergyMeV.toFixed(2)} MeV`;
+            } else {
+                state.beamEnergyMeV = rawSlider * 50; // 5 MeV to 5000 MeV (5 GeV)
+                const displayVal = state.beamEnergyMeV >= 1000
+                    ? `${(state.beamEnergyMeV / 1000).toFixed(2)} GeV`
+                    : `${state.beamEnergyMeV.toFixed(0)} MeV`;
+                document.getElementById('val-energy').textContent = displayVal;
+            }
+
+            state.bunchCount = parseInt(document.getElementById('slider-luminosity').value, 10);
+            document.getElementById('val-luminosity').textContent = `${state.bunchCount} Pairs`;
+
+            state.beamOffset = parseFloat(document.getElementById('slider-offset').value);
+            document.getElementById('val-offset').textContent = `${(state.beamOffset * 0.1).toFixed(1)} mm`;
+
+            updateTelemetry();
+        }
+
+        function toggleSlowMotion() {
+            state.slowMo = !state.slowMo;
+            state.timeScale = state.slowMo ? 0.22 : 1.0;
+            const btn = document.getElementById('btn-slowmo');
+            btn.classList.toggle('active', state.slowMo);
+            btn.textContent = state.slowMo ? '⏱ Slow-Mo (0.22x)' : '⏱ Slow-Mo (1.0x)';
+            showToast(state.slowMo ? 'TIME DILATION: 0.22x SLOW-MO' : 'REAL-TIME SIMULATION (1.0x)');
+        }
+
+        function toggleVectors() {
+            state.showVectors = !state.showVectors;
+            document.getElementById('btn-vectors').classList.toggle('active', state.showVectors);
+        }
+
+        // Spawn Trapped Antimatter Particles in Penning Trap
+        function spawnTrapCloud(count) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 12 + Math.random() * 48;
+                const z = (Math.random() - 0.5) * 70;
+                state.particles.push({
+                    type: 'anti',
+                    x: Math.cos(angle) * radius,
+                    y: Math.sin(angle) * radius,
+                    z: z,
+                    vx: -Math.sin(angle) * (1.8 + Math.random()),
+                    vy: Math.cos(angle) * (1.8 + Math.random()),
+                    vz: (Math.random() - 0.5) * 1.6,
+                    phase: Math.random() * Math.PI * 2,
+                    trail: []
+                });
+            }
+        }
+
+        function injectAntimatter() {
+            if (state.mode !== 'trap') return;
+            spawnTrapCloud(12);
+            showToast(`INJECTED 12 ${CONSTANTS.species[state.species].antiSymbol} PARTICLES`);
+            addLog(`Injected 12 ${CONSTANTS.species[state.species].name}s into Penning trap.`);
+            updateTelemetry();
+        }
+
+        function triggerMagneticQuench() {
+            if (state.mode !== 'trap') return;
+            state.quenched = true;
+            state.bField = 0.05;
+            document.getElementById('slider-bfield').value = 0.2;
+            document.getElementById('val-bfield').textContent = '0.05 T (QUENCH)';
+            document.getElementById('system-status').classList.add('quench');
+            document.getElementById('status-text').textContent = 'MAGNETIC QUENCH // CONTAINMENT BREACH';
+
+            // Give particles outward radial kick as magnetic bottle collapses
+            state.particles.forEach(p => {
+                const r = Math.hypot(p.x, p.y) || 1;
+                p.vx += (p.x / r) * (3.5 + Math.random() * 2.5);
+                p.vy += (p.y / r) * (3.5 + Math.random() * 2.5);
+                p.vz += (Math.random() - 0.5) * 3.0;
+            });
+
+            showToast('CRITICAL: SUPERCONDUCTING MAGNET QUENCH!');
+            addLog('ALERT: Magnetic quench! B-field collapsed; antimatter impacting trap walls.', 'alert');
+        }
+
+        // Fire Opposing Beams in Collider Mode
+        function fireColliderBeams() {
+            if (state.mode !== 'collider') return;
+            state.particles = [];
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            const cy = h / 2;
+
+            // Relativistic speed factor (visualized between 3.5 and 9.5 px/frame)
+            const spInfo = CONSTANTS.species[state.species];
+            const gamma = 1 + state.beamEnergyMeV / spInfo.restMeV;
+            const beta = Math.sqrt(1 - 1 / (gamma * gamma));
+            const speed = 3.2 + beta * 6.2;
+
+            for (let i = 0; i < state.bunchCount; i++) {
+                const spreadX = i * 24;
+                const spreadY = (Math.random() - 0.5) * 14;
+
+                // Matter beam from Left -> Right
+                state.particles.push({
+                    type: 'matter',
+                    x: 60 - spreadX,
+                    y: cy - state.beamOffset + spreadY,
+                    vx: speed,
+                    vy: 0,
+                    energyMeV: state.beamEnergyMeV,
+                    trail: []
+                });
+
+                // Antimatter beam from Right -> Left
+                state.particles.push({
+                    type: 'anti',
+                    x: w - 60 + spreadX,
+                    y: cy + state.beamOffset - spreadY,
+                    vx: -speed,
+                    vy: 0,
+                    energyMeV: state.beamEnergyMeV,
+                    trail: []
+                });
+            }
+            showToast(`FIRED ${state.bunchCount} ${spInfo.matterSymbol} / ${spInfo.antiSymbol} BUNCHES`);
+        }
+
+        // Create Annihilation Flash, Gamma Rays, or Pion Jets
+        function spawnAnnihilationEvent(x, y, z, kineticMeV, is3D = false) {
+            const spInfo = CONSTANTS.species[state.species];
+            const totalReleaseMeV = 2 * spInfo.restMeV + kineticMeV;
+
+            state.annihilationCount++;
+            state.totalEnergyMeV += totalReleaseMeV;
+            state.lastPairEnergyMeV = totalReleaseMeV;
+
+            // Expanding shockwave flash
+            state.flashes.push({
+                x, y, z,
+                is3D,
+                radius: 2,
+                maxRadius: state.species === 'antiproton' ? 75 : 52,
+                alpha: 1.0,
+                energyMeV: totalReleaseMeV
+            });
+
+            // High-energy Proton-Antiproton collision -> Pion & Quark-Antiquark Jet Shower
+            if (state.species === 'antiproton' && totalReleaseMeV > 1900) {
+                const numTracks = 6 + Math.floor(Math.random() * 5);
+                for (let i = 0; i < numTracks; i++) {
+                    const angle = (Math.PI * 2 * i) / numTracks + (Math.random() - 0.5) * 0.35;
+                    const spd = 4.5 + Math.random() * 4.5;
+                    const chargeType = i % 3 === 0 ? 'gamma' : (i % 2 === 0 ? 'pion+' : 'pion-');
+                    state.jets.push({
+                        x, y, z,
+                        is3D,
+                        vx: Math.cos(angle) * spd,
+                        vy: Math.sin(angle) * spd,
+                        vz: (Math.random() - 0.5) * spd,
+                        chargeType,
+                        life: 1.0,
+                        curve: chargeType === 'gamma' ? 0 : (chargeType === 'pion+' ? 0.035 : -0.035),
+                        trail: []
+                    });
+                }
+            } else {
+                // Electron-Positron (or low-energy) -> Twin Gamma-Ray Photons at 180 degrees (Conservation of Momentum)
+                const baseAngle = is3D ? Math.random() * Math.PI * 2 : (Math.random() * 0.8 + 0.55);
+                const photonSpeed = 7.5;
+                for (let dir of [1, -1]) {
+                    const angle = baseAngle + (dir === -1 ? Math.PI : 0);
+                    state.photons.push({
+                        x, y, z,
+                        is3D,
+                        vx: Math.cos(angle) * photonSpeed,
+                        vy: Math.sin(angle) * photonSpeed,
+                        vz: is3D ? (Math.random() - 0.5) * 4 * dir : 0,
+                        energyMeV: totalReleaseMeV / 2,
+                        life: 1.0,
+                        wavePhase: 0
+                    });
+                }
+            }
+
+            if (state.annihilationCount % 5 === 1 || state.mode === 'collider') {
+                const label = state.species === 'antiproton' && totalReleaseMeV > 1900
+                    ? `p̄p annihilation (${(totalReleaseMeV/1000).toFixed(2)} GeV) → Hadronic pion jets`
+                    : `e⁺e⁻ annihilation (${totalReleaseMeV.toFixed(2)} MeV) → 2γ @ 180°`;
+                addLog(label, 'annihilation');
+            }
+        }
+
+        // Physics Step Update
+        function updatePhysics() {
+            const dt = state.timeScale;
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+
+            if (state.mode === 'trap') {
+                // 1. Spawn stray residual gas molecules based on Vacuum Pressure
+                // Higher pressure (e.g. 10^-6 Pa) -> frequent gas intrusions
+                const gasProb = Math.pow(10, state.vacuumExp + 9.2) * 0.035 * dt;
+                if (Math.random() < gasProb && state.gasMolecules.length < 18) {
+                    const angle = Math.random() * Math.PI * 2;
+                    state.gasMolecules.push({
+                        x: Math.cos(angle) * 145,
+                        y: Math.sin(angle) * 145,
+                        z: (Math.random() - 0.5) * 110,
+                        vx: -Math.cos(angle) * (1.2 + Math.random()),
+                        vy: -Math.sin(angle) * (1.2 + Math.random()),
+                        vz: (Math.random() - 0.5) * 0.8
+                    });
+                }
+
+                // Update gas molecules
+                for (let i = state.gasMolecules.length - 1; i >= 0; i--) {
+                    const g = state.gasMolecules[i];
+                    g.x += g.vx * dt;
+                    g.y += g.vy * dt;
+                    g.z += g.vz * dt;
+                    if (Math.hypot(g.x, g.y, g.z) > 190) {
+                        state.gasMolecules.splice(i, 1);
+                    }
+                }
+
+                // 2. Update Trapped Antimatter in Penning Trap (Lorentz Force + Quadrupole Electric Field)
+                const spInfo = CONSTANTS.species[state.species];
+                const massScale = state.species === 'positron' ? 1.0 : 0.25; // Heavier antiprotons orbit slower visually
+                const omegaC = state.bField * 0.085 * massScale * spInfo.chargeSign;
+                const axialRestore = (state.ePotential / 120) * 0.018 * massScale;
+                const radialRepel = (state.ePotential / 120) * 0.005 * massScale; // Quadrupole radial outward push
+
+                for (let i = state.particles.length - 1; i >= 0; i--) {
+                    const p = state.particles[i];
+
+                    // Record trail
+                    if (Math.random() < 0.65) {
+                        p.trail.push({ x: p.x, y: p.y, z: p.z });
+                        if (p.trail.length > 14) p.trail.shift();
+                    }
+
+                    // Lorentz Force F = q(E + v x B) with B along Z-axis
+                    // ax = omegaC * vy + radialRepel * x
+                    // ay = -omegaC * vx + radialRepel * y
+                    // az = -axialRestore * z
+                    const ax = omegaC * p.vy + radialRepel * p.x;
+                    const ay = -omegaC * p.vx + radialRepel * p.y;
+                    const az = -axialRestore * p.z;
+
+                    p.vx += ax * dt;
+                    p.vy += ay * dt;
+                    p.vz += az * dt;
+
+                    // Subtle radiative/buffer-gas cooling damping when trap is healthy
+                    if (!state.quenched && state.bField > 0.6) {
+                        p.vx *= 0.9985;
+                        p.vy *= 0.9985;
+                        p.vz *= 0.9985;
+                    }
+
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.z += p.vz * dt;
+
+                    // Check collision with stray residual gas molecules
+                    let annihilated = false;
+                    for (let j = state.gasMolecules.length - 1; j >= 0; j--) {
+                        const g = state.gasMolecules[j];
+                        const dist = Math.hypot(p.x - g.x, p.y - g.y, p.z - g.z);
+                        if (dist < 13) {
+                            spawnAnnihilationEvent(p.x, p.y, p.z, 0.02, true);
+                            state.gasMolecules.splice(j, 1);
+                            state.particles.splice(i, 1);
+                            annihilated = true;
+                            break;
+                        }
+                    }
+                    if (annihilated) continue;
+
+                    // Check Trap Electrode Wall Impact (Radial R > 115 or Axial |Z| > 95)
+                    const radialDist = Math.hypot(p.x, p.y);
+                    if (radialDist > 115 || Math.abs(p.z) > 95) {
+                        // Particle hits copper/gold electrode wall -> immediate annihilation with wall matter!
+                        spawnAnnihilationEvent(p.x, p.y, p.z, 0.05, true);
+                        state.particles.splice(i, 1);
+                    }
+                }
+            } else {
+                // MODE 2: PARTICLE ACCELERATOR & ANNIHILATION COLLIDER
+                for (let i = state.particles.length - 1; i >= 0; i--) {
+                    const p = state.particles[i];
+                    p.trail.push({ x: p.x, y: p.y });
+                    if (p.trail.length > 18) p.trail.shift();
+
+                    // Subtle magnetic focusing quadrupole near interaction point (center)
+                    const distToCenter = Math.abs(p.x - w / 2);
+                    if (distToCenter < 180) {
+                        const pullY = ((h / 2) - p.y) * 0.0025;
+                        p.vy += pullY * dt;
+                    }
+
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+
+                    // Check collision between matter and antimatter particles
+                    if (p.type === 'anti') {
+                        for (let j = state.particles.length - 1; j >= 0; j--) {
+                            const m = state.particles[j];
+                            if (m.type === 'matter') {
+                                const dist = Math.hypot(p.x - m.x, p.y - m.y);
+                                if (dist < 16) {
+                                    const vx = (p.x + m.x) / 2;
+                                    const vy = (p.y + m.y) / 2;
+                                    spawnAnnihilationEvent(vx, vy, 0, p.energyMeV + m.energyMeV, false);
+                                    // Remove both particles safely
+                                    const highIdx = Math.max(i, j);
+                                    const lowIdx = Math.min(i, j);
+                                    state.particles.splice(highIdx, 1);
+                                    state.particles.splice(lowIdx, 1);
+                                    i = Math.min(i, state.particles.length);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // Remove particles exiting beamline
+                    if (p && (p.x < -100 || p.x > w + 100)) {
+                        state.particles.splice(i, 1);
+                    }
+                }
+            }
+
+            // Update Gamma Photons
+            for (let i = state.photons.length - 1; i >= 0; i--) {
+                const ph = state.photons[i];
+                ph.x += ph.vx * dt;
+                ph.y += ph.vy * dt;
+                ph.z += ph.vz * dt;
+                ph.wavePhase += 0.45 * dt;
+                ph.life -= 0.014 * dt;
+                if (ph.life <= 0) state.photons.splice(i, 1);
+            }
+
+            // Update Hadronic Pion Jets (curved tracks in detector magnetic field)
+            for (let i = state.jets.length - 1; i >= 0; i--) {
+                const jt = state.jets[i];
+                jt.trail.push({ x: jt.x, y: jt.y, z: jt.z });
+                if (jt.trail.length > 22) jt.trail.shift();
+
+                // Bend charged pion trajectories in detector solenoid field
+                const angle = Math.atan2(jt.vy, jt.vx) + jt.curve * dt;
+                const spd = Math.hypot(jt.vx, jt.vy);
+                jt.vx = Math.cos(angle) * spd;
+                jt.vy = Math.sin(angle) * spd;
+
+                jt.x += jt.vx * dt;
+                jt.y += jt.vy * dt;
+                jt.z += jt.vz * dt;
+                jt.life -= 0.012 * dt;
+                if (jt.life <= 0) state.jets.splice(i, 1);
+            }
+
+            // Update Annihilation Flashes
+            for (let i = state.flashes.length - 1; i >= 0; i--) {
+                const fl = state.flashes[i];
+                fl.radius += 2.4 * dt;
+                fl.alpha -= 0.032 * dt;
+                if (fl.alpha <= 0) state.flashes.splice(i, 1);
+            }
+        }
+
+        // Render Penning Trap 3D Electrode Architecture
+        function drawPenningTrapGeometry() {
+            const ringRadius = 115;
+            const endcapZ = 95;
+            const segments = 36;
+
+            ctx.save();
+            // Draw Axial Magnetic Field Lines (B_z)
+            const bOpacity = Math.min(0.45, state.bField / 12);
+            ctx.strokeStyle = `rgba(0, 240, 255, ${bOpacity})`;
+            ctx.lineWidth = 1;
+            const fieldOffsets = [-60, -30, 0, 30, 60];
+            fieldOffsets.forEach(ox => {
+                fieldOffsets.forEach(oz => {
+                    if (Math.hypot(ox, oz) > 75) return;
+                    const pTop = project3D(ox, oz, -120);
+                    const pBot = project3D(ox, oz, 120);
+                    ctx.beginPath();
+                    ctx.moveTo(pTop.x, pTop.y);
+                    ctx.lineTo(pBot.x, pBot.y);
+                    ctx.stroke();
+                });
+            });
+
+            // Helper to draw 3D ring at Z
+            function drawElectrodeRing(zPos, rad, color, lineWidth = 1.5, dashed = false) {
+                ctx.beginPath();
+                ctx.strokeStyle = color;
+                ctx.lineWidth = lineWidth;
+                if (dashed) ctx.setLineDash([4, 4]);
+                else ctx.setLineDash([]);
+
+                for (let i = 0; i <= segments; i++) {
+                    const theta = (i / segments) * Math.PI * 2;
+                    const pt = project3D(Math.cos(theta) * rad, Math.sin(theta) * rad, zPos);
+                    if (i === 0) ctx.moveTo(pt.x, pt.y);
+                    else ctx.lineTo(pt.x, pt.y);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // Central Hyperbolic Ring Electrode (Quadrupole Potential V0)
+            const eGlow = 0.25 + (state.ePotential / 400) * 0.55;
+            drawElectrodeRing(0, ringRadius, `rgba(255, 30, 110, ${eGlow})`, 2.2);
+            drawElectrodeRing(-16, ringRadius * 1.03, `rgba(255, 30, 110, ${eGlow * 0.4})`, 1, true);
+            drawElectrodeRing(16, ringRadius * 1.03, `rgba(255, 30, 110, ${eGlow * 0.4})`, 1, true);
+
+            // Upper & Lower Endcap Electrodes
+            drawElectrodeRing(-endcapZ, ringRadius * 0.72, 'rgba(0, 240, 255, 0.45)', 1.8);
+            drawElectrodeRing(endcapZ, ringRadius * 0.72, 'rgba(0, 240, 255, 0.45)', 1.8);
+
+            // Structural Support Struts
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.14)';
+            ctx.lineWidth = 1;
+            for (let k = 0; k < 4; k++) {
+                const a = (k * Math.PI) / 2 + Math.PI / 4;
+                const p1 = project3D(Math.cos(a) * ringRadius * 0.72, Math.sin(a) * ringRadius * 0.72, -endcapZ);
+                const p2 = project3D(Math.cos(a) * ringRadius, Math.sin(a) * ringRadius, 0);
+                const p3 = project3D(Math.cos(a) * ringRadius * 0.72, Math.sin(a) * ringRadius * 0.72, endcapZ);
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.lineTo(p3.x, p3.y);
+                ctx.stroke();
+            }
+
+            // B-Field Direction Vector Indicator
+            const bStart = project3D(-135, 0, 50);
+            const bEnd = project3D(-135, 0, -50);
+            drawArrow(bStart.x, bStart.y, bEnd.x, bEnd.y, '#00f0ff', `B = ${state.bField.toFixed(1)} T`);
+
+            ctx.restore();
+        }
+
+        // Render Collider Detector Geometry
+        function drawColliderGeometry() {
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            const cx = w / 2;
+            const cy = h / 2;
+
+            ctx.save();
+            // Concentric Calorimeter & Silicon Tracker Rings
+            const radii = [55, 115, 180, 245];
+            radii.forEach((r, idx) => {
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                ctx.strokeStyle = idx === 0
+                    ? 'rgba(255, 190, 11, 0.25)'
+                    : 'rgba(0, 240, 255, 0.11)';
+                ctx.lineWidth = idx === 3 ? 2 : 1;
+                if (idx === 1) ctx.setLineDash([6, 6]);
+                else ctx.setLineDash([]);
+                ctx.stroke();
+            });
+            ctx.setLineDash([]);
+
+            // Beamline Vacuum Pipe
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.65)';
+            ctx.fillRect(0, cy - 26, w, 52);
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, cy - 26); ctx.lineTo(w, cy - 26);
+            ctx.moveTo(0, cy + 26); ctx.lineTo(w, cy + 26);
+            ctx.stroke();
+
+            // Interaction Point Crosshair
+            ctx.strokeStyle = 'rgba(255, 190, 11, 0.35)';
+            ctx.beginPath();
+            ctx.moveTo(cx - 16, cy); ctx.lineTo(cx + 16, cy);
+            ctx.moveTo(cx, cy - 16); ctx.lineTo(cx, cy + 16);
+            ctx.stroke();
+
+            // Beam Direction Labels
+            const sp = CONSTANTS.species[state.species];
+            ctx.font = '600 11px monospace';
+            ctx.fillStyle = 'rgba(0, 240, 255, 0.75)';
+            ctx.fillText(`MATTER BEAM (${sp.matterSymbol}) ➔`, 24, cy - 36);
+
+            ctx.fillStyle = 'rgba(255, 30, 110, 0.85)';
+            const rightText = `⬅ ANTIMATTER BEAM (${sp.antiSymbol})`;
+            ctx.fillText(rightText, w - ctx.measureText(rightText).width - 24, cy - 36);
+
+            ctx.restore();
+        }
+
+        // Vector Arrow Drawing Helper
+        function drawArrow(x1, y1, x2, y2, color, label = '') {
+            const headLen = 7;
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+            ctx.closePath();
+            ctx.fill();
+
+            if (label) {
+                ctx.font = '600 10px monospace';
+                ctx.fillText(label, x2 + 6, y2 + 3);
+            }
+            ctx.restore();
+        }
+
+        // Wavy Gamma-Ray Photon Renderer
+        function drawGammaPhoton(ph) {
+            let sx, sy, ex, ey;
+            if (ph.is3D) {
+                const p1 = project3D(ph.x, ph.y, ph.z);
+                const p2 = project3D(ph.x - ph.vx * 3.5, ph.y - ph.vy * 3.5, ph.z - ph.vz * 3.5);
+                sx = p1.x; sy = p1.y; ex = p2.x; ey = p2.y;
+            } else {
+                sx = ph.x; sy = ph.y;
+                ex = ph.x - ph.vx * 4.5;
+                ey = ph.y - ph.vy * 4.5;
+            }
+
+            const dx = sx - ex;
+            const dy = sy - ey;
+            const len = Math.hypot(dx, dy) || 1;
+            const nx = -dy / len;
+            const ny = dx / len;
+
+            ctx.save();
+            ctx.strokeStyle = `rgba(255, 190, 11, ${ph.life})`;
+            ctx.shadowColor = '#ffbe0b';
+            ctx.shadowBlur = 10;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+
+            const steps = 14;
+            for (let i = 0; i <= steps; i++) {
+                const t = i / steps;
+                const bx = ex + dx * t;
+                const by = ey + dy * t;
+                const wave = Math.sin(t * Math.PI * 4 + ph.wavePhase) * 3.5;
+                if (i === 0) ctx.moveTo(bx + nx * wave, by + ny * wave);
+                else ctx.lineTo(bx + nx * wave, by + ny * wave);
+            }
+            ctx.stroke();
+
+            // Photon head dot & label
+            ctx.fillStyle = `rgba(255, 240, 180, ${ph.life})`;
+            ctx.beginPath();
+            ctx.arc(sx, sy, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (ph.life > 0.55) {
+                ctx.font = '600 10px monospace';
+                ctx.fillStyle = `rgba(255, 190, 11, ${ph.life})`;
+                const eText = ph.energyMeV >= 1000
+                    ? `γ (${(ph.energyMeV / 1000).toFixed(2)} GeV)`
+                    : `γ (${(ph.energyMeV * 1000).toFixed(0)} keV)`;
+                ctx.fillText(eText, sx + 6, sy - 4);
+            }
+            ctx.restore();
+        }
+
+        // Main Render Loop
+        function render() {
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            ctx.clearRect(0, 0, w, h);
+
+            // 1. Draw Background Apparatus
+            if (state.mode === 'trap') {
+                drawPenningTrapGeometry();
+            } else {
+                drawColliderGeometry();
+            }
+
+            // 2. Draw Residual Gas Molecules (Trap Mode)
+            state.gasMolecules.forEach(g => {
+                const pt = project3D(g.x, g.y, g.z);
+                ctx.save();
+                ctx.fillStyle = 'rgba(0, 240, 255, 0.75)';
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, 3.2 * pt.scale, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // 3. Draw Particles & Cyclotron Trails
+            state.particles.forEach(p => {
+                const isAnti = p.type === 'anti';
+                const color = isAnti ? '#ff1e6e' : '#00f0ff';
+
+                if (state.mode === 'trap') {
+                    // Draw 3D cyclotron orbit trail
+                    if (p.trail.length > 1) {
+                        ctx.beginPath();
+                        p.trail.forEach((tr, idx) => {
+                            const proj = project3D(tr.x, tr.y, tr.z);
+                            if (idx === 0) ctx.moveTo(proj.x, proj.y);
+                            else ctx.lineTo(proj.x, proj.y);
+                        });
+                        ctx.strokeStyle = 'rgba(255, 30, 110, 0.28)';
+                        ctx.lineWidth = 1.2;
+                        ctx.stroke();
+                    }
+
+                    const pt = project3D(p.x, p.y, p.z);
+                    const rad = (state.species === 'antiproton' ? 4.8 : 3.6) * pt.scale;
+
+                    ctx.save();
+                    ctx.fillStyle = color;
+                    ctx.shadowColor = color;
+                    ctx.shadowBlur = 12;
+                    ctx.beginPath();
+                    ctx.arc(pt.x, pt.y, Math.max(2, rad), 0, Math.PI * 2);
+                    ctx.fill();
+
+                    if (state.showVectors) {
+                        const vEnd = project3D(p.x + p.vx * 6, p.y + p.vy * 6, p.z + p.vz * 6);
+                        drawArrow(pt.x, pt.y, vEnd.x, vEnd.y, 'rgba(255, 110, 160, 0.7)');
+                    }
+                    ctx.restore();
+                } else {
+                    // Collider 2D particle rendering
+                    if (p.trail.length > 1) {
+                        ctx.beginPath();
+                        p.trail.forEach((tr, idx) => {
+                            if (idx === 0) ctx.moveTo(tr.x, tr.y);
+                            else ctx.lineTo(tr.x, tr.y);
+                        });
+                        ctx.strokeStyle = isAnti ? 'rgba(255, 30, 110, 0.35)' : 'rgba(0, 240, 255, 0.35)';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                    }
+
+                    const rad = state.species === 'antiproton' ? 5.5 : 4.2;
+                    ctx.save();
+                    ctx.fillStyle = color;
+                    ctx.shadowColor = color;
+                    ctx.shadowBlur = 14;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    if (state.showVectors) {
+                        drawArrow(p.x, p.y, p.x + p.vx * 4.5, p.y + p.vy * 4.5, color);
+                    }
+                    ctx.restore();
+                }
+            });
+
+            // 4. Draw Gamma-Ray Photons
+            state.photons.forEach(drawGammaPhoton);
+
+            // 5. Draw Hadronic Pion Jets
+            state.jets.forEach(jt => {
+                const jetColor = jt.chargeType === 'gamma'
+                    ? `rgba(255, 190, 11, ${jt.life})`
+                    : jt.chargeType === 'pion+'
+                        ? `rgba(255, 30, 110, ${jt.life})`
+                        : `rgba(0, 240, 255, ${jt.life})`;
+
+                if (jt.trail.length > 1) {
+                    ctx.beginPath();
+                    jt.trail.forEach((tr, idx) => {
+                        const pt = jt.is3D ? project3D(tr.x, tr.y, tr.z) : tr;
+                        if (idx === 0) ctx.moveTo(pt.x, pt.y);
+                        else ctx.lineTo(pt.x, pt.y);
+                    });
+                    ctx.strokeStyle = jetColor;
+                    ctx.lineWidth = 1.6;
+                    ctx.stroke();
+                }
+
+                const head = jt.is3D ? project3D(jt.x, jt.y, jt.z) : jt;
+                ctx.fillStyle = jetColor;
+                ctx.beginPath();
+                ctx.arc(head.x, head.y, 2.2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // 6. Draw Annihilation Vertex Flashes
+            state.flashes.forEach(fl => {
+                const pt = fl.is3D ? project3D(fl.x, fl.y, fl.z) : fl;
+                ctx.save();
+                const grad = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, fl.radius);
+                grad.addColorStop(0, `rgba(255, 255, 255, ${fl.alpha})`);
+                grad.addColorStop(0.35, `rgba(255, 190, 11, ${fl.alpha * 0.85})`);
+                grad.addColorStop(0.75, `rgba(255, 30, 110, ${fl.alpha * 0.35})`);
+                grad.addColorStop(1, 'rgba(255, 30, 110, 0)');
+
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, fl.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (fl.alpha > 0.45 && !fl.is3D) {
+                    ctx.font = '700 11px monospace';
+                    ctx.fillStyle = `rgba(255, 255, 255, ${fl.alpha})`;
+                    const eStr = fl.energyMeV >= 1000
+                        ? `ΔE = ${(fl.energyMeV / 1000).toFixed(2)} GeV`
+                        : `ΔE = ${fl.energyMeV.toFixed(2)} MeV`;
+                    ctx.fillText(eStr, pt.x + 12, pt.y - 10);
+                }
+                ctx.restore();
+            });
+        }
+
+        // Update Live Scientific Telemetry Readouts
+        function updateTelemetry() {
+            const spInfo = CONSTANTS.species[state.species];
+            const antiCount = state.particles.filter(p => p.type === 'anti').length;
+
+            document.getElementById('tel-count').textContent = antiCount;
+            document.getElementById('tel-species-label').textContent = `${spInfo.name}s (${spInfo.antiSymbol})`;
+            document.getElementById('tel-annihilations').textContent = state.annihilationCount;
+
+            // Cyclotron frequency f_c = qB / (2 * pi * m)
+            const bVal = state.mode === 'trap' ? state.bField : 3.8; // CMS/ATLAS solenoid ~ 3.8 T
+            const fcHz = (CONSTANTS.e * bVal) / (2 * Math.PI * spInfo.massKg);
+            const fcText = fcHz >= 1e9
+                ? `${(fcHz / 1e9).toFixed(2)} GHz`
+                : `${(fcHz / 1e6).toFixed(2)} MHz`;
+            document.getElementById('tel-cyclotron').textContent = fcText;
+
+            // Approximate Larmor radius
+            const larmorMm = state.species === 'positron'
+                ? (0.42 / bVal).toFixed(2)
+                : (18.5 / bVal).toFixed(2);
+            document.getElementById('tel-larmor').textContent = `r_L ≈ ${larmorMm} mm`;
+
+            // Stored antimatter mass in nanograms (1 kg = 1e12 ng)
+            const massNg = antiCount * spInfo.massKg * 1e12;
+            const chargeC = antiCount * CONSTANTS.e;
+            document.getElementById('tel-mass').textContent = `${massNg.toExponential(2)} ng`;
+            document.getElementById('tel-charge').textContent = `Q = ${spInfo.chargeSign > 0 ? '+' : '−'}${chargeC.toExponential(2)} C`;
+
+            // Containment Stability Percentage
+            let stability = 100;
+            if (state.mode === 'trap') {
+                if (state.quenched || state.bField < 0.4) {
+                    stability = 0;
+                } else {
+                    const bScore = Math.min(100, (state.bField / 2.2) * 100);
+                    const eScore = state.ePotential >= 40 && state.ePotential <= 320 ? 100 : 65;
+                    const vacPenalty = Math.max(0, (state.vacuumExp + 12) * 14);
+                    stability = Math.max(0, Math.min(100, (bScore * 0.6 + eScore * 0.4) - vacPenalty));
+                }
+            } else {
+                stability = 100;
+            }
+
+            const stabPct = document.getElementById('tel-stability-pct');
+            const stabBar = document.getElementById('tel-stability-bar');
+            stabPct.textContent = `${stability.toFixed(1)}%`;
+            stabBar.style.width = `${stability}%`;
+            if (stability > 75) {
+                stabPct.style.color = 'var(--success-green)';
+                stabBar.style.background = 'var(--success-green)';
+            } else if (stability > 35) {
+                stabPct.style.color = 'var(--gamma-gold)';
+                stabBar.style.background = 'var(--gamma-gold)';
+            } else {
+                stabPct.style.color = 'var(--danger-red)';
+                stabBar.style.background = 'var(--danger-red)';
+            }
+
+            // Single Pair Annihilation Energy E = 2m0c^2 + K
+            const kPair = state.mode === 'collider' ? 2 * state.beamEnergyMeV : 0.02;
+            const pairMeV = 2 * spInfo.restMeV + kPair;
+            const pairJoules = pairMeV * CONSTANTS.MeV_to_J;
+
+            const pairText = pairMeV >= 1000
+                ? `${(pairMeV / 1000).toFixed(3)} GeV`
+                : `${pairMeV.toFixed(3)} MeV`;
+            document.getElementById('tel-pair-energy').textContent = pairText;
+            document.getElementById('tel-pair-joules').textContent = `${pairJoules.toExponential(3)} Joules`;
+
+            // Cumulative Session Energy
+            const totalMeV = state.totalEnergyMeV;
+            const totalJoules = totalMeV * CONSTANTS.MeV_to_J;
+            const totalText = totalMeV >= 1000
+                ? `${(totalMeV / 1000).toFixed(3)} GeV`
+                : `${totalMeV.toFixed(3)} MeV`;
+            document.getElementById('tel-total-energy').textContent = totalText;
+            document.getElementById('tel-total-joules').textContent = `${totalJoules.toExponential(3)} J`;
+
+            // Picograms TNT equivalent (1 pg TNT = 4.184e-9 J)
+            const pgTNT = totalJoules / 4.184e-9;
+            document.getElementById('tel-session-tnt').textContent = `Session yield: ${pgTNT.toExponential(2)} pg TNT equivalent`;
+        }
+
+        // Main Animation Loop
+        let frameCounter = 0;
+        function loop() {
+            updatePhysics();
+            render();
+            frameCounter++;
+            if (frameCounter % 6 === 0) {
+                updateTelemetry();
+            }
+            requestAnimationFrame(loop);
+        }
+
+        // Boot Simulation on Window Load
+        window.onload = function () {
+            resizeCanvas();
+            spawnTrapCloud(24);
+            updateTrapParams();
+            updateTelemetry();
+            loop();
+        };
+    </script>
+</body>
+</html>
